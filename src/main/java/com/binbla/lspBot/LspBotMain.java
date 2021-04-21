@@ -32,9 +32,10 @@ public final class LspBotMain extends JavaPlugin {
         });
     }
     public Boolean checkGroupPermission(MessageEvent gMsg){
-        if(gMsg.getSender().getId() == Config.INSTANCE.getOwner())return true;
+        
         if(gMsg.getMessage().serializeToMiraiCode().startsWith("[mirai:at:"+gMsg.getBot().getId()+"]")){
             //是否at机器人开头
+            if(gMsg.getSender().getId() == Config.INSTANCE.getOwner())return true;
             if(Config.INSTANCE.getBotID().contains(gMsg.getSubject().getBot().getId())){
                 //机器人是否在列表
                 if(Config.INSTANCE.getGroupMode().containsKey(""+gMsg.getSubject().getId())){
