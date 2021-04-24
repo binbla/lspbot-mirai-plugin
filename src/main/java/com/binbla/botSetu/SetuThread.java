@@ -6,9 +6,11 @@ import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageChainBuilder;
 import net.mamoe.mirai.message.data.SimpleServiceMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import com.binbla.botSetu.SetuMain;
 
 /**
@@ -18,7 +20,7 @@ import com.binbla.botSetu.SetuMain;
  * >Version 1.0.0
  * >CreateTime 2021-04-24  14:50
  */
-public class SetuThread extends Thread{
+public class SetuThread extends Thread {
     MessageEvent gMsg;
 
     SetuThread(MessageEvent gMsg) {
@@ -29,10 +31,10 @@ public class SetuThread extends Thread{
     @Override
     public void run() {
         //检查是否有限时撤回
-        if(Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId()).get(1)==0L){
-            gMsg.getSubject().sendMessage(buildMsg());
-        }else{
+        if (Config.INSTANCE.getGroupMode().containsKey(gMsg.getSubject().getId()) && Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId()).get(1)!=0) {
             gMsg.getSubject().sendMessage(buildMsg()).recallIn(Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId()).get(1));
+        } else {
+            gMsg.getSubject().sendMessage(buildMsg());
         }
     }
 
@@ -82,18 +84,18 @@ public class SetuThread extends Thread{
                     }
                     case 7:
                     case 8: {//将用户添加到名单
-                        if(checkOwner()){
-                            try{
+                        if (checkOwner()) {
+                            try {
                                 Long userID = Long.parseLong(command[2]);
-                                if(cmdCode == 7){
-                                    addList("whiteList",userID);
-                                }else{
-                                    addList("blackList",userID);
+                                if (cmdCode == 7) {
+                                    addList("whiteList", userID);
+                                } else {
+                                    addList("blackList", userID);
                                 }
-                            }catch (NumberFormatException e){
+                            } catch (NumberFormatException e) {
                                 throw new SetuException(103);
                             }
-                        }else{
+                        } else {
                             throw new SetuException(102);
                         }
                         chain = new MessageChainBuilder().append("哦～").build();
@@ -103,34 +105,34 @@ public class SetuThread extends Thread{
                         chain = checkUserList();
                         break;
                     }
-                    case 10:{
-                        if(checkOwner()){
+                    case 10: {
+                        if (checkOwner()) {
                             chain = shiftWhiteListMode();
-                        }else throw new SetuException(102);
+                        } else throw new SetuException(102);
                         break;
                     }
-                    case 11:{
-                        if(checkOwner()){
+                    case 11: {
+                        if (checkOwner()) {
                             chain = shiftBlackListMode();
-                        }else{
+                        } else {
                             throw new SetuException(102);
                         }
                         break;
                     }
-                    case 12:{
+                    case 12: {
                         try {
                             Long userID = Long.parseLong(command[2]);
                             chain = removeWhiteList(userID);
-                        }catch (NumberFormatException e){
+                        } catch (NumberFormatException e) {
                             throw new SetuException(103);
                         }
                         break;
                     }
-                    case 13:{
+                    case 13: {
                         try {
                             Long userID = Long.parseLong(command[2]);
                             chain = removeBlackList(userID);
-                        }catch (NumberFormatException e){
+                        } catch (NumberFormatException e) {
                             throw new SetuException(103);
                         }
                         break;
@@ -172,10 +174,10 @@ public class SetuThread extends Thread{
         if (Config.INSTANCE.getCommand_addWhiteList().contains(command)) return 7;
         if (Config.INSTANCE.getCommand_addBlackList().contains(command)) return 8;
         if (Config.INSTANCE.getCommand_checkUserList().contains(command)) return 9;
-        if(Config.INSTANCE.getCommand_shiftWhiteList().contains(command))return 10;
-        if(Config.INSTANCE.getCommand_shiftBlackList().contains(command))return 11;
-        if(Config.INSTANCE.getCommand_removeWhiteList().contains(command))return 12;
-        if(Config.INSTANCE.getCommand_removeBlackList().contains(command))return 13;
+        if (Config.INSTANCE.getCommand_shiftWhiteList().contains(command)) return 10;
+        if (Config.INSTANCE.getCommand_shiftBlackList().contains(command)) return 11;
+        if (Config.INSTANCE.getCommand_removeWhiteList().contains(command)) return 12;
+        if (Config.INSTANCE.getCommand_removeBlackList().contains(command)) return 13;
         return -1;
     }
 
@@ -194,7 +196,7 @@ public class SetuThread extends Thread{
         MessageChain chain;
         try {
             //调用LspConnection中的url构造方法获取json
-            String apiUrl = buildGetUrl(keyWord,gMsg.getSubject().getId());
+            String apiUrl = buildGetUrl(keyWord, gMsg.getSubject().getId());
             String apiReturnedJson = SetuConnection.getJsonString(apiUrl);
             if ("".equals(apiReturnedJson)) {
                 throw new SetuException(-2);
@@ -217,8 +219,17 @@ public class SetuThread extends Thread{
 
     public void switchMode(int modeCode) {
         //切换模式
-        List<Long> temp = Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId());
-        temp.set(0, (long) modeCode);
+        Map<Long,List<Long>> temp= Config.INSTANCE.getGroupMode();
+        List<Long> values;
+        if(temp.containsKey(gMsg.getSubject().getId())){
+            values = temp.get(gMsg.getSubject().getId());
+            values.set(1, (long) modeCode);
+        }else{
+            values = new ArrayList<Long>();
+            values.add((long) modeCode);
+            values.add(0L);
+            temp.put(gMsg.getSubject().getId(),values);
+        }
     }
 
     public String getXmlString(JsonClass json) {
@@ -239,7 +250,7 @@ public class SetuThread extends Thread{
 
     public Boolean checkSetuPermission() {
         //检查当前群是否不能发色图（状态3）
-        return Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId()).get(0)!=3;
+        return Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId()).get(0) != 3;
     }
 
     public MessageChain checkStatus() {
@@ -265,11 +276,11 @@ public class SetuThread extends Thread{
                         break;
                 }
 
-                String tmp = groupInf.get(1)==0?"已关闭":""+groupInf.get(1);
+                String tmp = groupInf.get(1) == 0 ? "已关闭" : "" + groupInf.get(1);
                 String content =
-                        "当前群:" + gMsg.getSubject().getId()+
-                        "\n当前模式:" + mode +
-                        "\n自动撤回："+tmp;
+                        "当前群:" + gMsg.getSubject().getId() +
+                                "\n当前模式:" + mode +
+                                "\n自动撤回：" + tmp +"ms";
                 chain = new MessageChainBuilder().append(content).build();
             } else {
                 throw new SetuException(101);
@@ -297,10 +308,10 @@ public class SetuThread extends Thread{
                 "\n混合模式：" + Config.INSTANCE.getCommand_mode2() +
                 "\n添加白名单：" + Config.INSTANCE.getCommand_addWhiteList() +
                 "\n添加黑名单：" + Config.INSTANCE.getCommand_addBlackList() +
-                "\n移除白名单：" +Config.INSTANCE.getCommand_removeWhiteList()+
-                "\n移除黑名单：" +Config.INSTANCE.getCommand_removeBlackList()+
-                "\n白名单开关："+ Config.INSTANCE.getCommand_shiftWhiteList()+
-                "\n黑名单开关："+Config.INSTANCE.getCommand_shiftBlackList()+
+                "\n移除白名单：" + Config.INSTANCE.getCommand_removeWhiteList() +
+                "\n移除黑名单：" + Config.INSTANCE.getCommand_removeBlackList() +
+                "\n白名单开关：" + Config.INSTANCE.getCommand_shiftWhiteList() +
+                "\n黑名单开关：" + Config.INSTANCE.getCommand_shiftBlackList() +
                 "\n查看名单详细：" + Config.INSTANCE.getCommand_checkUserList();
         chain = new MessageChainBuilder().append(help).build();
         return chain;
@@ -309,12 +320,12 @@ public class SetuThread extends Thread{
     public void setRecall(Long time) {
         //设置自动撤回时间
         List<Long> temp = Config.INSTANCE.getGroupMode().get(gMsg.getSubject().getId());
-        temp.set(1,time);
+        temp.set(1, time);
     }
 
-    public void addList(String mode,Long userID) {
+    public void addList(String mode, Long userID) {
         //将用户添加到list
-        if(Config.INSTANCE.getList().get(mode).contains(userID))return;
+        if (Config.INSTANCE.getList().get(mode).contains(userID)) return;
         Set<Long> list = Config.INSTANCE.getList().get(mode);
         list.add(userID);
     }
@@ -322,13 +333,14 @@ public class SetuThread extends Thread{
     public MessageChain checkUserList() {
         MessageChain chain;
         String content = "名单状态：";
-        content += "\n白名单："+Config.INSTANCE.getListMode().get("whiteListMode")+
-                "\n黑名单：" +Config.INSTANCE.getListMode().get("blackListMode")+
-                "\n白名单列表：" + Config.INSTANCE.getList().get("whiteList")+
+        content += "\n白名单：" + Config.INSTANCE.getListMode().get("whiteListMode") +
+                "\n黑名单：" + Config.INSTANCE.getListMode().get("blackListMode") +
+                "\n白名单列表：" + Config.INSTANCE.getList().get("whiteList") +
                 "\n黑名单列表：" + Config.INSTANCE.getList().get("blackList");
         chain = new MessageChainBuilder().append(content).build();
         return chain;
     }
+
     public String buildGetUrl(String keyWord, Long groupID) {
         String buildUrl = Config.INSTANCE.getAddress();
         buildUrl += "?r18=" + Config.INSTANCE.getGroupMode().get(groupID);
@@ -347,25 +359,31 @@ public class SetuThread extends Thread{
         buildUrl += "&num=" + Config.INSTANCE.getNum();
         return buildUrl;
     }
-    public MessageChain shiftWhiteListMode(){
-        Map<String,Boolean> temp = Config.INSTANCE.getListMode();
-        temp.put("whiteListMode",!temp.get("whiteListMode"));
+
+    public MessageChain shiftWhiteListMode() {
+        Map<String, Boolean> temp = Config.INSTANCE.getListMode();
+        temp.put("whiteListMode", !temp.get("whiteListMode"));
         return new MessageChainBuilder().append("哦～").build();
     }
-    public MessageChain shiftBlackListMode(){
-        Map<String,Boolean> temp = Config.INSTANCE.getListMode();
-        temp.put("blackListMode",!temp.get("blackListMode"));
+
+    public MessageChain shiftBlackListMode() {
+        Map<String, Boolean> temp = Config.INSTANCE.getListMode();
+        temp.put("blackListMode", !temp.get("blackListMode"));
         return new MessageChainBuilder().append("哦～").build();
     }
-    public MessageChain removeWhiteList(Long userID){
-        if(Config.INSTANCE.getList().get("whiteList").contains(userID)){
+
+    public MessageChain removeWhiteList(Long userID) {
+        if (Config.INSTANCE.getList().get("whiteList").contains(userID)) {
             Config.INSTANCE.getList().get("whiteList").remove(userID);
-        }return new MessageChainBuilder().append("哦～").build();
+        }
+        return new MessageChainBuilder().append("哦～").build();
     }
-    public MessageChain removeBlackList(Long userID){
-        if(Config.INSTANCE.getList().get("blackList").contains(userID)){
+
+    public MessageChain removeBlackList(Long userID) {
+        if (Config.INSTANCE.getList().get("blackList").contains(userID)) {
             Config.INSTANCE.getList().get("blackList").remove(userID);
-        }return new MessageChainBuilder().append("哦～").build();
+        }
+        return new MessageChainBuilder().append("哦～").build();
     }
 
 }

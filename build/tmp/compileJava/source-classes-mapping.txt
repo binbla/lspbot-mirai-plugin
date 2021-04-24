@@ -3,9 +3,9 @@ com/binbla/botSetu/JsonClass.java
  com.binbla.botSetu.JsonClass
 com/binbla/botSetu/SetuException.java
  com.binbla.botSetu.SetuException
+com/binbla/botSetu/SetuConnection.java
+ com.binbla.botSetu.SetuConnection
 com/binbla/botSetu/SetuMain.java
  com.binbla.botSetu.SetuMain
 com/binbla/botSetu/SetuThread.java
  com.binbla.botSetu.SetuThread
-com/binbla/botSetu/SetuConnection.java
- com.binbla.botSetu.SetuConnection
