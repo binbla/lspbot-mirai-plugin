@@ -223,7 +223,7 @@ public class SetuThread extends Thread {
         List<Long> values;
         if(temp.containsKey(gMsg.getSubject().getId())){
             values = temp.get(gMsg.getSubject().getId());
-            values.set(1, (long) modeCode);
+            values.set(0, (long) modeCode);
         }else{
             values = new ArrayList<Long>();
             values.add((long) modeCode);
@@ -276,11 +276,11 @@ public class SetuThread extends Thread {
                         break;
                 }
 
-                String tmp = groupInf.get(1) == 0 ? "已关闭" : "" + groupInf.get(1);
+                String tmp = groupInf.get(1) == 0 ? "已关闭" : groupInf.get(1)+"ms";
                 String content =
                         "当前群:" + gMsg.getSubject().getId() +
                                 "\n当前模式:" + mode +
-                                "\n自动撤回：" + tmp +"ms";
+                                "\n自动撤回：" + tmp ;
                 chain = new MessageChainBuilder().append(content).build();
             } else {
                 throw new SetuException(101);

@@ -21,8 +21,7 @@ public class JsonClass {
 
     public static JsonClass getAPI(String json) {
         Gson gson = new Gson();
-        JsonClass object = gson.fromJson(json, JsonClass.class);
-        return object;
+        return gson.fromJson(json, JsonClass.class);
     }
 }
 

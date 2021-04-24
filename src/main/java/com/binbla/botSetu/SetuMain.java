@@ -50,6 +50,7 @@ public final class SetuMain extends JavaPlugin {
                 if (Config.INSTANCE.getListMode().get("blackListMode")) {
                     return !Config.INSTANCE.getList().get("blackList").contains(gMsg.getSender().getId());
                 }
+                return true;
             }
         }
         return false;
