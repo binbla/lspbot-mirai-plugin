@@ -343,7 +343,7 @@ public class SetuThread extends Thread {
 
     public String buildGetUrl(String keyWord, Long groupID) {
         String buildUrl = Config.INSTANCE.getAddress();
-        buildUrl += "?r18=" + Config.INSTANCE.getGroupMode().get(groupID);
+        buildUrl += "?r18=" + Config.INSTANCE.getGroupMode().get(groupID).get(0);
         if (!("".equals(Config.INSTANCE.getApiKey()))) {
             buildUrl += "&apikey=" + Config.INSTANCE.getApiKey();
         }
